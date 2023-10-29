@@ -10,7 +10,6 @@ uint64_t read_cycles(void)
   return cycles;
 }
                 
-
 uint16_t count_leading_zeros(uint64_t x)
 {
     x |= (x >> 1);
@@ -43,18 +42,30 @@ uint16_t cvrt_uint16(uint64_t x)
 
 int main()
 {
+    uint64_t oldcount = read_cycles();
     uint64_t test_data[3] = {0x0fffffffffffffff, 0x00003567, 0xa};
     uint16_t n;
     uint16_t bit_count = 64 * (sizeof(test_data) / 8), bit_reduced = 0;
-
-    for (int i = 0; i < 3; i++)
-        printf("%llu\n", test_data[i]);
-
+    char buffer[2] = {0, '\n'};
+    for (int i = 0; i < 3; i++){
+        int temp = test_data[i];
+        buffer[0] = temp + 48; // ascii
+        asm("li a0, 1 \n"
+            "mv a1, %0 \n"
+            "li a2, 2 \n"
+            "li a7, 64 \n"
+            "ecall \n"
+            :
+            :"r"(&buffer));
+    }
+    char orig_str[] = "original bit count: ";
+    buffer[0] = bit_count + 48;
     printf("original bit count: %hu\n", (unsigned short int)bit_count);
     bit_count = 0;
     for (int i = 0; i < 3; i++)
     {
         n = count_leading_zeros(test_data[i]);
+
         printf("leading zeros of test data[%d]: %hu\n", i, n);
 
         if (n >= 48)
@@ -74,4 +85,10 @@ int main()
     }
     printf("bit count after compressed: %hu\n", (unsigned short int)(bit_count));
     printf("bit reduced after compressed: %hu\n", (unsigned short int)(bit_reduced));
+
+    uint64_t cyclecount = read_cycles() - oldcount;
+
+    printf("cycle count: %u\n", (unsigned int) cyclecount);
+
+    return 0;
 }

@@ -2,56 +2,49 @@
     num0: .word 0x0fffffff 0xffffffff # big endian num = 1152921504606846975
     num1: .word 0x00000000 0x00003567 # big endian num = 13671
     num2: .word 0x00000000 0x0000000a # big endian num = 10
-    str0:  .string "\n\noriginal bit count: 64"
+    str0:  .string "\noriginal bit count: 64"
     str1:  .string "\nleading zeros of test data: "
-    str2:  .string "\nbits count after compressed: "
-    str3:  .string "\nbits reduced after compressed: "
+    str2:  .string "\nbit count after compressed: "
+    str3:  .string "\nbit reduced after compressed: "
 .text
 
 main:
-    li   a2,0
-    li   a3,1
-    jal  ra, test_data_index_counter
-
-test_data_index_counter:
-    blt,  a2, a3, count_num0
-    beq   a2, a3, count_num1
-    bgt   a2, a3, count_num2
-
-
-count_num0:
+load_nums:
+    # s2 stores num0
     la  t0, num0
     lwu  s2, 0(t0)
     slli s2, s2, 32
     lwu t0, 4(t0)
     or  s2, s2, t0
-    mv t0, s2
-    j CLZ
-count_num1:
-    la  t0, num1
-    lwu  s2, 0(t0)
-    slli s2, s2, 32
-    lwu t0, 4(t0)
-    or  s2, s2, t0
-    mv t0, s2
-    j CLZ
-count_num2:
-    la  t0, num2
-    lwu  s2, 0(t0)
-    slli s2, s2, 32
-    lwu t0, 4(t0)
-    or  s2, s2, t0
-    mv t0, s2
-    jal  ra, CLZ
-    j    exit
-exit:
-    li   a7, 10 
-	ecall
     
-CLZ: 
-    #x |= (x>>2, 4, 8, 16, 32)
+    # s3 stores num1
+    la  t0, num1
+    lwu  s3, 0(t0)
+    slli s3, s3, 32
+    lwu t0, 4(t0)
+    or  s3, s3, t0
+    
+    # s4 stores num2
+    la  t0, num2
+    lwu  s4, 0(t0)
+    slli s4, s4, 32
+    lwu t0, 4(t0)
+    or  s4, s4, t0
+CLZ:
     # t0 stores x
-    # t1 stores temp
+    mv t0, s3
+    
+    # t1 stores temp　 
+    srli t1, t0, 1
+    
+    # t2 stores shamt
+    addi t2, t2, 2
+    
+    # t3 stores end loop index(32)
+    addi t3, t3, 64
+  
+    # x |= (x>>1)
+    
     srli t1, t0, 1
     or t0, t1, t0  
     srli t1, t0, 2
@@ -114,7 +107,6 @@ CLZ:
     sub t0, t2, t0
     
 compress:
-    li t4, 0
     li t3, 32
     li t2, 48
     li t1, 64
@@ -123,11 +115,9 @@ compress:
 
 to_uint32:
     li t1, 32
-    li t4, 32
     j print
 to_uint16:
     li t1, 16
-    li t4, 48
     j print
 
 
@@ -152,15 +142,3 @@ print:
     mv a0, t1
     li a7, 1
     ecall
-    
-    la a0, str3
-    li a7, 4
-    ecall
-    
-    mv a0, t4
-    li a7, 1
-    ecall
-    
-    # test data index ++
-    addi a2,a2,1
-    ret
