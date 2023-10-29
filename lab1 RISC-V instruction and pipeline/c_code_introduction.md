@@ -28,3 +28,6 @@ uint16_t count_leading_zeros(uint64_t x)
     return (64 - (x & 0x7f));                                           // return: 64 - 0x31(49) = 15
 }
 ```
+
+
+# this project aims to solve 
