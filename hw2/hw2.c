@@ -1,6 +1,12 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 
+// define extern function get_cycles() in getcycles.S
+extern uint64_t get_cycles();
+
+                ... omission
+                
 uint16_t count_leading_zeros(uint64_t x)
 {
     x |= (x >> 1);
